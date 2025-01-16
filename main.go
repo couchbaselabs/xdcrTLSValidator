@@ -162,12 +162,17 @@ func runECDSAVerificationDebug(cert *x509.Certificate) {
 
 func printCertificateDetails(counter int, certificate *x509.Certificate, failedReason string) {
 	if failedReason != "" {
-		fmt.Printf("Certificate Details (%d) - %s:\n", counter, failedReason)
+		fmt.Printf("[FAILED] Certificate Details (%d) - %s:\n", counter, failedReason)
 	} else {
-		fmt.Printf("Certificate Details (%d):\n", counter)
+		fmt.Printf("[PASSED] Certificate Details (%d):\n", counter)
 	}
 	fmt.Printf("  Subject: %s\n", certificate.Subject)
 	fmt.Printf("  Issuer: %s\n", certificate.Issuer)
+	if certificate.Subject.String() == certificate.Issuer.String() {
+		fmt.Println("  Self-signed: true")
+	} else {
+		fmt.Println("  Self-signed: false")
+	}
 	fmt.Printf("  Serial Number: %s\n", certificate.SerialNumber)
 	fmt.Printf("  Not Before: %s\n", certificate.NotBefore)
 	fmt.Printf("  Not After: %s\n", certificate.NotAfter)
@@ -287,11 +292,14 @@ func main() {
 	}
 
 	if len(options.ClientCert) > 0 {
+		fmt.Println("Validating client certificate...")
 		// Validate the client certificate
 		err = validateClientCert(validCaCerts, clientCert)
 		if err != nil {
-			fmt.Println("Error validating client certificate using filtered CA certs:", err)
+			fmt.Println("[FAILED] Error validating client certificate using filtered CA certs:", err)
 			// It's ok to continue with invalid client certs and into the next output section
+		} else {
+			fmt.Println("[PASSED] Client certificate is valid and is signed by the provided CA cert chain")
 		}
 	}
 
